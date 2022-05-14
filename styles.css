@@ -1,7 +1,6 @@
 
 * {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-
 }
 
 ul {
@@ -9,21 +8,17 @@ ul {
 }
 
 .vociTabella {
-
-
 }
 
 .smallImage {
     height: auto;
     width: 90px;
     cursor: help;
-    filter: blur(0px);
     vertical-align: middle;
     margin: 2px;
     margin-right: 5px;
     border-radius: 1em;
-
-
+    filter: blur(0px);
 }
 
 .smallImage:hover {
