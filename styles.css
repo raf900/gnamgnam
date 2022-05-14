@@ -3,24 +3,47 @@
     font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
+h1 {
+    text-align: center;
+}
+
 ul {
     list-style-type: none;
 }
 
+li {
+    filter:brightness(0.8);
+    margin-right: 10px;
+}
+
+li:hover {
+    filter:brightness(1);
+}
+
+#bordo {
+    background-color:whitesmoke;
+    width: fit-content;
+    border-radius: 1em;
+    border: double black;
+}
+
 .vociTabella {
+    text-decoration: none;
+    color: black;
+}
+
+.vociTabella:hover {
+    text-decoration: underline;
 }
 
 .smallImage {
     height: auto;
     width: 90px;
-    cursor: help;
     vertical-align: middle;
-    margin: 2px;
+    margin: 3px;
+    margin-left: -30px;
     margin-right: 5px;
+    border: 1px solid;
+    border-color: black;
     border-radius: 1em;
-    filter: blur(0px);
-}
-
-.smallImage:hover {
-    filter: blur(1px);
 }
