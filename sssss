@@ -1,0 +1,93 @@
+[33mcommit ddf0a081dbdaa56210a7c620eb5df2ec54ce83ed[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Rafael <raf1990@gmail.com>
+Date:   Sat May 14 01:09:17 2022 +0200
+
+    'radiocchio' name correction
+    
+    Spelling mistake
+
+[33mcommit cac670e7eb032a493950ccda417a0288f71afe17[m
+Author: Rafael <raf1990@gmail.com>
+Date:   Sat May 14 01:06:38 2022 +0200
+
+    Added 4 new pages.html and to index.html
+    
+    Added minestra-lenticchie.html, minestrone.html, patate-forno-bacon.html, risotto-radicchio-taleggio.html
+
+[33mcommit 4a8252c8834a6b4a88e3e086b6c9587bcfba400b[m
+Author: Rafael <raf1990@gmail.com>
+Date:   Sat May 14 00:52:45 2022 +0200
+
+    Added pasta-carbonara.html
+    
+    Added complete pasta-carbonara.html page to files and to recipes index. Also added other recipes only to index.
+
+[33mcommit a82812655e34db1c1b5d7b5100707ed2bb6a1f6e[m
+Author: Rafael <raf1990@gmail.com>
+Date:   Sat May 14 00:29:07 2022 +0200
+
+    Added styles.css to website
+    
+    Added styles.css external file for styling and linked to index.html
+
+[33mcommit d849d3a487f57fa27d14361084ca980bacde02eb[m
+Author: Rafael <raf1990@gmail.com>
+Date:   Fri May 13 01:29:03 2022 +0200
+
+    Added link to previously added image
+    
+    Now the image redirects to the recipe page, as does the recipe title.
+
+[33mcommit 11bdd83ebe110a6b7c393862c29cd44ae0a62d2c[m
+Author: Rafael <raf1990@gmail.com>
+Date:   Fri May 13 01:21:24 2022 +0200
+
+    Added bolognese picture to index.html
+    
+    Added bolognese picture to the table next to the recipe name, in index.html.
+
+[33mcommit 3e409d5331477ac651a403f66715a1a079a18561[m
+Author: Rafael <raf1990@gmail.com>
+Date:   Fri May 13 01:15:35 2022 +0200
+
+    Small fixes
+    
+    Fixed image and page links.
+
+[33mcommit 915a606c902b70e9688e800653a7a6cb8e732afb[m
+Author: Rafael <raf1990@gmail.com>
+Date:   Fri May 13 01:01:41 2022 +0200
+
+    Completed pasta-bolognese.html
+    
+    Completed the page of Pasta Bolognese with all the recipe details: a picture, a description, the ingredients and the steps.
+
+[33mcommit 80147ea56b20fa84ef476d9e8b634f1e197daac9[m
+Author: Rafael <raf1990@gmail.com>
+Date:   Fri May 13 00:37:41 2022 +0200
+
+    Added images folder and bolognese picture
+    
+    Added images folder and bolognese picture inside the folder, committing for practice.
+
+[33mcommit 2a95904dd747197cdf7890d1795c671ee1f31300[m
+Author: Rafael <raf1990@gmail.com>
+Date:   Fri May 13 00:25:12 2022 +0200
+
+    Added pasta-bolognese.html, linked to index.html
+    
+    Added pasta-bolognese.html with basic code and linked to index.html inside an unordered table.
+
+[33mcommit a171e45bb932092c0792b4c8f28207a8ef590028[m
+Author: Rafael <raf1990@gmail.com>
+Date:   Fri May 13 00:12:28 2022 +0200
+
+    Edited README.md file
+    
+    Edited README.md file with a simple description. Git practice.
+
+[33mcommit 9f8270d110bfa7e6793f37ac988e96b52e13e610[m
+Author: raf900 <45871746+raf900@users.noreply.github.com>
+Date:   Fri May 13 00:00:55 2022 +0200
+
+    Initial commit
