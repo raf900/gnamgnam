@@ -1,6 +1,7 @@
 
 * {
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    color: pink;
 }
 
 h1 {
@@ -13,23 +14,29 @@ ul {
 
 li {
     filter:brightness(0.8);
-    margin-right: 10px;
+    margin-left: -43px;
+    padding: 5px;
 }
 
 li:hover {
     filter:brightness(1);
+    background-color: pink;
+    color: black;
+    border-radius: 1em;
 }
 
 #bordo {
-    background-color:whitesmoke;
+    background-color:black;
     width: fit-content;
     border-radius: 1em;
-    border: double black;
+    border: 5px solid pink;
+    padding: 2em;
 }
 
 .vociTabella {
     text-decoration: none;
-    color: black;
+    font-size: medium;
+    font-weight: bold;
 }
 
 .vociTabella:hover {
@@ -40,10 +47,7 @@ li:hover {
     height: auto;
     width: 90px;
     vertical-align: middle;
-    margin: 3px;
-    margin-left: -30px;
-    margin-right: 5px;
-    border: 1px solid;
-    border-color: black;
+    margin-right: 6px;
+    border: 1px solid pink;
     border-radius: 1em;
 }
