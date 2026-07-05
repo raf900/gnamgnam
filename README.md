@@ -1,4 +1,4 @@
-# bombrecipes
+# gnamgnam
 
 This project is about creating my first website.
 

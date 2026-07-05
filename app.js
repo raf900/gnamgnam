@@ -1,4 +1,4 @@
-/* B*mb Recipes — app logic: routing, meal plan, shopping list */
+/* gnamgnam — app logic: routing, meal plan, shopping list */
 
 (function () {
   "use strict";
@@ -16,7 +16,8 @@
     { id: "lunch", label: "Pranzo" },
     { id: "dinner", label: "Cena" }
   ];
-  var STORAGE_KEY = "bomb.mealplan.v1";
+  var STORAGE_KEY = "gnamgnam.mealplan.v1";
+  var LEGACY_STORAGE_KEY = "bomb.mealplan.v1";
 
   var viewHome = document.getElementById("view-home");
   var viewDetail = document.getElementById("view-detail");
@@ -36,7 +37,7 @@
 
   function loadPlan() {
     try {
-      var raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      var raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)) || {};
       var clean = {};
       Object.keys(raw).forEach(function (key) {
         if (findRecipe(raw[key])) clean[key] = raw[key];

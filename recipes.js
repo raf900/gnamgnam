@@ -1,5 +1,5 @@
 /* ============================================================
- * B*mb Recipes — recipe data
+ * gnamgnam — recipe data
  * ============================================================
  * To add a recipe, copy an existing block and edit it. Fields:
  *

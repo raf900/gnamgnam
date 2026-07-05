@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "bombrecipes",
+      "name": "gnamgnam",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["--yes", "serve", "-l", "5500", "."],
       "port": 5500
