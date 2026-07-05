@@ -65,8 +65,8 @@ const RECIPES = [
     totalTime: "1 h 35 min",
     servings: 4,
     description: [
-      "An excellent chunky pasta sauce with beef, pork, lots of vegetables and tons of flavor. Freeze any unused portions for later use.",
-      "If you have fresh herbs, you may substitute 2 teaspoons chopped fresh basil for the dried basil in this recipe."
+      "Un ottimo ragù ricco e corposo con manzo, maiale, tante verdure e un sapore intenso. Congelate le porzioni avanzate per usarle in seguito.",
+      "Se avete erbe fresche, potete sostituire il basilico secco con 2 cucchiaini di basilico fresco tritato."
     ],
     ingredients: [
       { qty: 2, unit: "cucchiai", name: "olio d'oliva" },
@@ -84,10 +84,10 @@ const RECIPES = [
       { qty: 1, unit: "kg", name: "pasta" }
     ],
     steps: [
-      "In a large skillet, warm oil over medium heat and saute bacon, onion and garlic until bacon is browned and crisp; set aside.",
-      "In large saucepan, brown beef and pork. Drain off excess fat. Stir in bacon mixture, mushrooms, carrots, celery, tomatoes, tomato sauce, wine, stock, basil, oregano, salt and pepper to saucepan. Cover, reduce heat and simmer one hour, stirring occasionally.",
-      "Bring a large pot of lightly salted water to a boil. Add pasta and cook for 8 to 10 minutes or until al dente; drain.",
-      "Serve sauce over hot pasta."
+      "In una padella capiente, scaldate l'olio a fuoco medio e fate rosolare bacon, cipolla e aglio finché il bacon non sarà dorato e croccante; mettete da parte.",
+      "In una casseruola capiente, fate rosolare il macinato di manzo e di maiale. Eliminate il grasso in eccesso. Aggiungete il composto di bacon, i funghi, le carote, il sedano, i pelati, il basilico, l'origano, sale e pepe. Coprite, abbassate il fuoco e lasciate sobbollire per un'ora, mescolando di tanto in tanto.",
+      "Portate a ebollizione una pentola capiente di acqua leggermente salata. Buttate la pasta e cuocete per 8-10 minuti o finché al dente; scolate.",
+      "Servite il ragù sulla pasta calda."
     ]
   },
   {
