@@ -1,24 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>B*mb Recipes</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-  <body>
-      <div id="bordo">
-        <h1>B*mb Recipes</h1>
-        <ul>
-          <a class="vociTabella" href="recipes/minestra-lenticchie.html"><li>         <img class="smallImage" src="images/minestra-lenticchie.jpg">Minestra di lenticchie               </li></a>
-          <a class="vociTabella" href="recipes/minestrone.html"><li>                  <img class="smallImage" src="images/minestrone.jpg">Minestrone                                    </li></a>
-          <a class="vociTabella" href="recipes/pasta-bolognese.html"><li>             <img class="smallImage" src="images/spaghetti-bolognese.jpg">Pasta Bolognese                      </li></a>
-          <a class="vociTabella" href="recipes/pasta-carbonara.html"><li>             <img class="smallImage" src="images/spaghetti-carbonara.jpg">Pasta Carbonara                      </li></a>
-          <a class="vociTabella" href="recipes/patate-forno-bacon.html"><li>          <img class="smallImage" src="images/patate-forno-bacon.jpg">Patate al forno con bacon             </li></a>
-          <a class="vociTabella" href="recipes/risotto-radicchio-taleggio.html"><li>  <img class="smallImage" src="images/risotto-radicchio-taleggio.jpg">Risotto radicchio e taleggio </li></a>
-          </ul>
-      </div>
+<body>
+  <header class="site-header">
+    <a href="#" class="site-title">B*mb Recipes</a>
+    <p class="site-tagline">Il mio ricettario personale</p>
+  </header>
+
+  <main>
+    <!-- Home view -->
+    <div id="view-home">
+      <section id="plan" class="section">
+        <div class="section-header">
+          <h2>Piano settimanale</h2>
+          <div class="section-actions">
+            <button id="btn-shopping" class="btn btn-primary">Genera lista della spesa</button>
+            <button id="btn-clear-plan" class="btn btn-ghost">Svuota piano</button>
+          </div>
+        </div>
+        <div id="plan-grid" class="plan-grid"></div>
+      </section>
+
+      <section id="shopping-list" class="section" hidden>
+        <div class="section-header">
+          <h2>Lista della spesa</h2>
+          <div class="section-actions">
+            <button id="btn-copy-list" class="btn btn-ghost">Copia</button>
+            <button id="btn-close-list" class="btn btn-ghost">Chiudi</button>
+          </div>
+        </div>
+        <div id="shopping-list-body" class="card shopping-card"></div>
+      </section>
+
+      <section id="recipe-list" class="section">
+        <div class="section-header">
+          <h2>Le mie ricette</h2>
+        </div>
+        <div id="recipe-grid" class="recipe-grid"></div>
+      </section>
     </div>
-  </body>
+
+    <!-- Recipe detail view -->
+    <div id="view-detail" hidden>
+      <a href="#" class="back-link">&larr; Tutte le ricette</a>
+      <article id="recipe-detail"></article>
+    </div>
+  </main>
+
+  <!-- Recipe picker for meal plan slots -->
+  <dialog id="picker">
+    <div class="picker-header">
+      <h3 id="picker-title">Scegli una ricetta</h3>
+      <button id="picker-close" class="btn btn-ghost" type="button">&times;</button>
+    </div>
+    <div id="picker-list" class="picker-list"></div>
+  </dialog>
+
+  <script src="recipes.js"></script>
+  <script src="app.js"></script>
+</body>
 </html>
