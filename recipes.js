@@ -101,12 +101,12 @@ const RECIPES = [
         "name": "cipolla"
       },
       {
-        "qty": 1,
+        "qty": null,
         "unit": "",
         "name": "carota"
       },
       {
-        "qty": 1,
+        "qty": null,
         "unit": "",
         "name": "sedano"
       },
