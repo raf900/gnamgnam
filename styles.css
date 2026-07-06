@@ -359,6 +359,11 @@ main {
   user-select: none;
 }
 
+body.drag-active,
+body.drag-active * {
+  cursor: grabbing;
+}
+
 .touch-ghost {
   position: fixed;
   left: 0;

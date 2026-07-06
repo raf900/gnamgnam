@@ -55,7 +55,7 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(plan));
   }
 
-  /* Shared drop logic for desktop (HTML5 DnD) and touch drag.
+  /* Shared drop logic for the unified drag & drop.
      Payload is "recipe:<id>" (assign) or "slot:<key>" (move/swap). */
   function applyDrop(data, key) {
     if (data.indexOf("recipe:") === 0) {
@@ -98,27 +98,10 @@
           openPicker(key, day.label, slot.label);
         });
 
-        btn.addEventListener("dragover", function (e) {
-          e.preventDefault();
-          btn.classList.add("drag-over");
-        });
-        btn.addEventListener("dragleave", function () {
-          btn.classList.remove("drag-over");
-        });
-        btn.addEventListener("drop", function (e) {
-          e.preventDefault();
-          btn.classList.remove("drag-over");
-          applyDrop(e.dataTransfer.getData("text/plain"), key);
-        });
         btn.dataset.slotKey = key;
 
         if (recipe) {
-          btn.draggable = true;
-          btn.addEventListener("dragstart", function (e) {
-            e.dataTransfer.setData("text/plain", "slot:" + key);
-            e.dataTransfer.effectAllowed = "move";
-          });
-          attachTouchDrag(btn, function () { return "slot:" + key; });
+          attachDragSource(btn, function () { return "slot:" + key; });
         }
 
         var label = document.createElement("span");
@@ -164,124 +147,182 @@
     });
   }
 
-  /* ---------- Touch drag & drop (mobile) ----------
-     HTML5 DnD doesn't fire on touchscreens: long-press (350ms) starts a
-     drag, a ghost clone follows the finger, elementFromPoint hit-tests
-     the slots, and the page auto-scrolls near the viewport edges. */
+  /* ---------- Unified drag & drop (mouse + touch) ----------
+     One engine for both inputs: a ghost clone follows the pointer,
+     elementFromPoint hit-tests the slots, and the page auto-scrolls
+     near the viewport edges. Touch starts with a long press (350ms)
+     so normal scrolling keeps working; mouse starts after a small
+     movement so plain clicks keep working. */
 
   var LONG_PRESS_MS = 350;
-  var touchDrag = {
-    timer: null, active: false, payload: null,
+  var drag = {
+    timer: null, active: false, payload: null, sourceEl: null,
     ghost: null, overSlot: null, scroller: null,
     startX: 0, startY: 0, lastX: 0, lastY: 0
   };
+  var suppressNextClick = false;
 
-  function attachTouchDrag(el, getPayload) {
+  document.addEventListener("click", function (e) {
+    if (suppressNextClick) {
+      suppressNextClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  function attachDragSource(el, getPayload) {
+    /* -- touch: long-press to start -- */
     el.addEventListener("touchstart", function (e) {
       if (e.touches.length !== 1) return;
       var t = e.touches[0];
-      touchDrag.startX = touchDrag.lastX = t.clientX;
-      touchDrag.startY = touchDrag.lastY = t.clientY;
-      touchDrag.timer = setTimeout(function () {
-        touchDrag.timer = null;
-        startTouchDrag(el, getPayload());
+      drag.startX = drag.lastX = t.clientX;
+      drag.startY = drag.lastY = t.clientY;
+      drag.timer = setTimeout(function () {
+        drag.timer = null;
+        startDrag(el, getPayload());
       }, LONG_PRESS_MS);
     }, { passive: true });
 
     el.addEventListener("touchmove", function (e) {
       var t = e.touches[0];
-      if (touchDrag.active) {
+      if (drag.active) {
         e.preventDefault();
-        touchDrag.lastX = t.clientX;
-        touchDrag.lastY = t.clientY;
-        moveTouchDrag(t.clientX, t.clientY);
-      } else if (touchDrag.timer &&
-        (Math.abs(t.clientX - touchDrag.startX) > 10 ||
-         Math.abs(t.clientY - touchDrag.startY) > 10)) {
+        drag.lastX = t.clientX;
+        drag.lastY = t.clientY;
+        moveDrag(t.clientX, t.clientY);
+      } else if (drag.timer &&
+        (Math.abs(t.clientX - drag.startX) > 10 ||
+         Math.abs(t.clientY - drag.startY) > 10)) {
         // finger moved before the long press: it's a scroll, not a drag
-        clearTimeout(touchDrag.timer);
-        touchDrag.timer = null;
+        clearTimeout(drag.timer);
+        drag.timer = null;
       }
     }, { passive: false });
 
     el.addEventListener("touchend", function (e) {
-      clearTimeout(touchDrag.timer);
-      touchDrag.timer = null;
-      if (touchDrag.active) {
+      clearTimeout(drag.timer);
+      drag.timer = null;
+      if (drag.active) {
         e.preventDefault(); // suppress the synthetic click/navigation
-        endTouchDrag();
+        endDrag();
       }
     });
 
     el.addEventListener("touchcancel", function () {
-      clearTimeout(touchDrag.timer);
-      touchDrag.timer = null;
-      if (touchDrag.active) cancelTouchDrag();
+      clearTimeout(drag.timer);
+      drag.timer = null;
+      if (drag.active) cancelDrag();
     });
 
     el.addEventListener("contextmenu", function (e) {
       // Android fires contextmenu on long-press
-      if (touchDrag.active || touchDrag.timer) e.preventDefault();
+      if (drag.active || drag.timer) e.preventDefault();
+    });
+
+    /* -- mouse: small movement to start, so clicks still work -- */
+    el.addEventListener("mousedown", function (e) {
+      if (e.button !== 0) return;
+      var startX = e.clientX;
+      var startY = e.clientY;
+
+      function onMove(ev) {
+        drag.lastX = ev.clientX;
+        drag.lastY = ev.clientY;
+        if (!drag.active &&
+          (Math.abs(ev.clientX - startX) > 6 ||
+           Math.abs(ev.clientY - startY) > 6)) {
+          startDrag(el, getPayload());
+        }
+        if (drag.active) {
+          ev.preventDefault();
+          moveDrag(ev.clientX, ev.clientY);
+        }
+      }
+
+      function onUp() {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        if (drag.active) {
+          suppressNextClick = true; // the drop must not count as a click
+          setTimeout(function () { suppressNextClick = false; }, 50);
+          endDrag();
+        }
+      }
+
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    });
+
+    /* the custom engine replaces native HTML5 DnD entirely */
+    el.addEventListener("dragstart", function (e) {
+      e.preventDefault();
     });
   }
 
-  function startTouchDrag(el, payload) {
-    touchDrag.active = true;
-    touchDrag.payload = payload;
+  function startDrag(el, payload) {
+    drag.active = true;
+    drag.payload = payload;
+    drag.sourceEl = el;
+    el.classList.add("dragging");
+    document.body.classList.add("drag-active");
 
     var rect = el.getBoundingClientRect();
     var ghost = el.cloneNode(true);
+    ghost.classList.remove("dragging");
     ghost.classList.add("touch-ghost");
     ghost.style.width = rect.width + "px";
     ghost.style.height = rect.height + "px";
     document.body.appendChild(ghost);
-    touchDrag.ghost = ghost;
+    drag.ghost = ghost;
 
     if (navigator.vibrate) navigator.vibrate(30);
-    moveTouchDrag(touchDrag.lastX, touchDrag.lastY);
+    moveDrag(drag.lastX, drag.lastY);
 
-    touchDrag.scroller = setInterval(function () {
+    drag.scroller = setInterval(function () {
       var dy = 0;
-      if (touchDrag.lastY < 90) dy = -14;
-      else if (touchDrag.lastY > window.innerHeight - 90) dy = 14;
+      if (drag.lastY < 90) dy = -14;
+      else if (drag.lastY > window.innerHeight - 90) dy = 14;
       if (dy) {
         window.scrollBy(0, dy);
-        moveTouchDrag(touchDrag.lastX, touchDrag.lastY);
+        moveDrag(drag.lastX, drag.lastY);
       }
     }, 16);
   }
 
-  function moveTouchDrag(x, y) {
-    var ghost = touchDrag.ghost;
+  function moveDrag(x, y) {
+    var ghost = drag.ghost;
     ghost.style.transform = "translate(" +
       (x - ghost.offsetWidth / 2) + "px, " +
       (y - ghost.offsetHeight / 2) + "px)";
 
     var under = document.elementFromPoint(x, y); // ghost has pointer-events:none
     var slot = under ? under.closest(".slot") : null;
-    if (touchDrag.overSlot && touchDrag.overSlot !== slot) {
-      touchDrag.overSlot.classList.remove("drag-over");
+    if (drag.overSlot && drag.overSlot !== slot) {
+      drag.overSlot.classList.remove("drag-over");
     }
     if (slot) slot.classList.add("drag-over");
-    touchDrag.overSlot = slot;
+    drag.overSlot = slot;
   }
 
-  function endTouchDrag() {
-    var slot = touchDrag.overSlot;
-    var payload = touchDrag.payload;
-    cancelTouchDrag();
+  function endDrag() {
+    var slot = drag.overSlot;
+    var payload = drag.payload;
+    cancelDrag();
     if (slot) applyDrop(payload, slot.dataset.slotKey);
   }
 
-  function cancelTouchDrag() {
-    clearInterval(touchDrag.scroller);
-    if (touchDrag.ghost) touchDrag.ghost.remove();
-    if (touchDrag.overSlot) touchDrag.overSlot.classList.remove("drag-over");
-    touchDrag.scroller = null;
-    touchDrag.ghost = null;
-    touchDrag.overSlot = null;
-    touchDrag.payload = null;
-    touchDrag.active = false;
+  function cancelDrag() {
+    clearInterval(drag.scroller);
+    if (drag.ghost) drag.ghost.remove();
+    if (drag.overSlot) drag.overSlot.classList.remove("drag-over");
+    if (drag.sourceEl) drag.sourceEl.classList.remove("dragging");
+    document.body.classList.remove("drag-active");
+    drag.scroller = null;
+    drag.ghost = null;
+    drag.overSlot = null;
+    drag.payload = null;
+    drag.sourceEl = null;
+    drag.active = false;
   }
 
   /* ---------- Picker dialog ---------- */
@@ -481,18 +522,7 @@
       card.className = "recipe-card card";
       card.href = "#recipe/" + recipe.id;
 
-      card.draggable = true;
-      card.addEventListener("dragstart", function (e) {
-        e.dataTransfer.setData("text/plain", "recipe:" + recipe.id);
-        e.dataTransfer.effectAllowed = "copy";
-        var rect = card.getBoundingClientRect();
-        e.dataTransfer.setDragImage(card, e.clientX - rect.left, e.clientY - rect.top);
-        card.classList.add("dragging");
-      });
-      card.addEventListener("dragend", function () {
-        card.classList.remove("dragging");
-      });
-      attachTouchDrag(card, function () { return "recipe:" + recipe.id; });
+      attachDragSource(card, function () { return "recipe:" + recipe.id; });
 
       var img = document.createElement("img");
       img.src = recipe.image;
