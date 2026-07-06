@@ -25,6 +25,48 @@
 
 const RECIPES = [
   {
+    id: "insalata-mista",
+    title: "Insalata Mista",
+    image: "images/placeholder.svg",
+    difficulty: "Facile",
+    prepTime: "15 min",
+    totalTime: "15 min",
+    servings: 2,
+    // TODO: quantità, foto e preparazione da completare
+    description: [],
+    ingredients: [
+      { qty: null, unit: "", name: "insalata verde/rossa" },
+      { qty: null, unit: "", name: "uova" },
+      { qty: null, unit: "", name: "grana padano" },
+      { qty: null, unit: "", name: "bacon" },
+      { qty: null, unit: "", name: "cetriolo" },
+      { qty: null, unit: "", name: "cipolla rossa" },
+      { qty: null, unit: "", name: "bruschette" }
+    ],
+    steps: ["Ricetta da completare."]
+  },
+  {
+    id: "riso-cantonese",
+    title: "Riso Cantonese",
+    image: "images/placeholder.svg",
+    difficulty: "Facile",
+    prepTime: "10 min",
+    totalTime: "30 min",
+    servings: 4,
+    // TODO: quantità, foto e preparazione da completare
+    description: [],
+    ingredients: [
+      { qty: null, unit: "", name: "riso" },
+      { qty: null, unit: "", name: "cipolla" },
+      { qty: null, unit: "", name: "carota" },
+      { qty: null, unit: "", name: "sedano" },
+      { qty: null, unit: "", name: "uova" },
+      { qty: null, unit: "", name: "bacon" },
+      { qty: null, unit: "", name: "salsa di soia" }
+    ],
+    steps: ["Ricetta da completare."]
+  },
+  {
     id: "minestra-lenticchie",
     title: "Minestra di Lenticchie",
     image: "images/minestra-lenticchie.jpg",

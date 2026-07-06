@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#f5f5f4"/>
+  <circle cx="200" cy="150" r="78" fill="#ffffff" stroke="#e7e5e4" stroke-width="4"/>
+  <circle cx="200" cy="150" r="46" fill="none" stroke="#e7e5e4" stroke-width="3"/>
+  <g stroke="#d6d3d1" stroke-width="6" stroke-linecap="round">
+    <line x1="86" y1="110" x2="86" y2="196"/>
+    <line x1="74" y1="110" x2="74" y2="134"/>
+    <line x1="98" y1="110" x2="98" y2="134"/>
+    <path d="M74 134 Q86 146 98 134" fill="none"/>
+    <line x1="316" y1="110" x2="316" y2="196"/>
+    <path d="M316 110 Q302 122 316 148" fill="none"/>
+  </g>
+  <text x="200" y="262" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#a8a29e">foto in arrivo</text>
+</svg>
