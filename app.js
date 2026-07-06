@@ -55,6 +55,25 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(plan));
   }
 
+  /* Shared drop logic for desktop (HTML5 DnD) and touch drag.
+     Payload is "recipe:<id>" (assign) or "slot:<key>" (move/swap). */
+  function applyDrop(data, key) {
+    if (data.indexOf("recipe:") === 0) {
+      plan[key] = data.slice("recipe:".length);
+    } else if (data.indexOf("slot:") === 0) {
+      var srcKey = data.slice("slot:".length);
+      if (srcKey === key || !plan[srcKey]) return;
+      var moved = plan[srcKey];
+      if (plan[key]) plan[srcKey] = plan[key];
+      else delete plan[srcKey];
+      plan[key] = moved;
+    } else {
+      return;
+    }
+    savePlan();
+    renderPlan();
+  }
+
   /* ---------- Meal plan rendering ---------- */
 
   function renderPlan() {
@@ -89,22 +108,9 @@
         btn.addEventListener("drop", function (e) {
           e.preventDefault();
           btn.classList.remove("drag-over");
-          var data = e.dataTransfer.getData("text/plain");
-          if (data.indexOf("recipe:") === 0) {
-            plan[key] = data.slice("recipe:".length);
-          } else if (data.indexOf("slot:") === 0) {
-            var srcKey = data.slice("slot:".length);
-            if (srcKey === key || !plan[srcKey]) return;
-            var moved = plan[srcKey];
-            if (plan[key]) plan[srcKey] = plan[key];
-            else delete plan[srcKey];
-            plan[key] = moved;
-          } else {
-            return;
-          }
-          savePlan();
-          renderPlan();
+          applyDrop(e.dataTransfer.getData("text/plain"), key);
         });
+        btn.dataset.slotKey = key;
 
         if (recipe) {
           btn.draggable = true;
@@ -112,6 +118,7 @@
             e.dataTransfer.setData("text/plain", "slot:" + key);
             e.dataTransfer.effectAllowed = "move";
           });
+          attachTouchDrag(btn, function () { return "slot:" + key; });
         }
 
         var label = document.createElement("span");
@@ -155,6 +162,126 @@
 
       planGrid.appendChild(col);
     });
+  }
+
+  /* ---------- Touch drag & drop (mobile) ----------
+     HTML5 DnD doesn't fire on touchscreens: long-press (350ms) starts a
+     drag, a ghost clone follows the finger, elementFromPoint hit-tests
+     the slots, and the page auto-scrolls near the viewport edges. */
+
+  var LONG_PRESS_MS = 350;
+  var touchDrag = {
+    timer: null, active: false, payload: null,
+    ghost: null, overSlot: null, scroller: null,
+    startX: 0, startY: 0, lastX: 0, lastY: 0
+  };
+
+  function attachTouchDrag(el, getPayload) {
+    el.addEventListener("touchstart", function (e) {
+      if (e.touches.length !== 1) return;
+      var t = e.touches[0];
+      touchDrag.startX = touchDrag.lastX = t.clientX;
+      touchDrag.startY = touchDrag.lastY = t.clientY;
+      touchDrag.timer = setTimeout(function () {
+        touchDrag.timer = null;
+        startTouchDrag(el, getPayload());
+      }, LONG_PRESS_MS);
+    }, { passive: true });
+
+    el.addEventListener("touchmove", function (e) {
+      var t = e.touches[0];
+      if (touchDrag.active) {
+        e.preventDefault();
+        touchDrag.lastX = t.clientX;
+        touchDrag.lastY = t.clientY;
+        moveTouchDrag(t.clientX, t.clientY);
+      } else if (touchDrag.timer &&
+        (Math.abs(t.clientX - touchDrag.startX) > 10 ||
+         Math.abs(t.clientY - touchDrag.startY) > 10)) {
+        // finger moved before the long press: it's a scroll, not a drag
+        clearTimeout(touchDrag.timer);
+        touchDrag.timer = null;
+      }
+    }, { passive: false });
+
+    el.addEventListener("touchend", function (e) {
+      clearTimeout(touchDrag.timer);
+      touchDrag.timer = null;
+      if (touchDrag.active) {
+        e.preventDefault(); // suppress the synthetic click/navigation
+        endTouchDrag();
+      }
+    });
+
+    el.addEventListener("touchcancel", function () {
+      clearTimeout(touchDrag.timer);
+      touchDrag.timer = null;
+      if (touchDrag.active) cancelTouchDrag();
+    });
+
+    el.addEventListener("contextmenu", function (e) {
+      // Android fires contextmenu on long-press
+      if (touchDrag.active || touchDrag.timer) e.preventDefault();
+    });
+  }
+
+  function startTouchDrag(el, payload) {
+    touchDrag.active = true;
+    touchDrag.payload = payload;
+
+    var rect = el.getBoundingClientRect();
+    var ghost = el.cloneNode(true);
+    ghost.classList.add("touch-ghost");
+    ghost.style.width = rect.width + "px";
+    ghost.style.height = rect.height + "px";
+    document.body.appendChild(ghost);
+    touchDrag.ghost = ghost;
+
+    if (navigator.vibrate) navigator.vibrate(30);
+    moveTouchDrag(touchDrag.lastX, touchDrag.lastY);
+
+    touchDrag.scroller = setInterval(function () {
+      var dy = 0;
+      if (touchDrag.lastY < 90) dy = -14;
+      else if (touchDrag.lastY > window.innerHeight - 90) dy = 14;
+      if (dy) {
+        window.scrollBy(0, dy);
+        moveTouchDrag(touchDrag.lastX, touchDrag.lastY);
+      }
+    }, 16);
+  }
+
+  function moveTouchDrag(x, y) {
+    var ghost = touchDrag.ghost;
+    ghost.style.transform = "translate(" +
+      (x - ghost.offsetWidth / 2) + "px, " +
+      (y - ghost.offsetHeight / 2) + "px)";
+
+    var under = document.elementFromPoint(x, y); // ghost has pointer-events:none
+    var slot = under ? under.closest(".slot") : null;
+    if (touchDrag.overSlot && touchDrag.overSlot !== slot) {
+      touchDrag.overSlot.classList.remove("drag-over");
+    }
+    if (slot) slot.classList.add("drag-over");
+    touchDrag.overSlot = slot;
+  }
+
+  function endTouchDrag() {
+    var slot = touchDrag.overSlot;
+    var payload = touchDrag.payload;
+    cancelTouchDrag();
+    if (slot) applyDrop(payload, slot.dataset.slotKey);
+  }
+
+  function cancelTouchDrag() {
+    clearInterval(touchDrag.scroller);
+    if (touchDrag.ghost) touchDrag.ghost.remove();
+    if (touchDrag.overSlot) touchDrag.overSlot.classList.remove("drag-over");
+    touchDrag.scroller = null;
+    touchDrag.ghost = null;
+    touchDrag.overSlot = null;
+    touchDrag.payload = null;
+    touchDrag.active = false;
   }
 
   /* ---------- Picker dialog ---------- */
@@ -334,6 +461,7 @@
       card.addEventListener("dragend", function () {
         card.classList.remove("dragging");
       });
+      attachTouchDrag(card, function () { return "recipe:" + recipe.id; });
 
       var img = document.createElement("img");
       img.src = recipe.image;

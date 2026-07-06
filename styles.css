@@ -316,6 +316,26 @@ main {
   opacity: 0.5;
 }
 
+/* Touch drag: ghost follows the finger; long-press must not trigger
+   the native callout/text-selection on the draggable elements */
+.recipe-card,
+.slot {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.touch-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  margin: 0;
+  pointer-events: none;
+  opacity: 0.9;
+  box-shadow: var(--shadow-lift);
+}
+
 .recipe-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lift);
