@@ -92,7 +92,7 @@ const RECIPES = [
     "ingredients": [
       {
         "qty": 200,
-        "unit": "",
+        "unit": "g",
         "name": "riso"
       },
       {
@@ -101,7 +101,7 @@ const RECIPES = [
         "name": "cipolla"
       },
       {
-        "qty": null,
+        "qty": 1,
         "unit": "",
         "name": "carota"
       },
