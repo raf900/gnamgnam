@@ -9,7 +9,7 @@
  *   image       path to the photo, e.g. "images/my-dish.jpg"
  *   category    lowercase label used for the filters above the recipe
  *               list, e.g. "pasta", "riso", "minestra", "insalata",
- *               "contorno". New categories appear as filters
+ *               "patate". New categories appear as filters
  *               automatically.
  *   difficulty  free text: "Facile", "Media", "Difficile", ...
  *   prepTime    free text, e.g. "10 min"
@@ -173,7 +173,7 @@ const RECIPES = [
     id: "patate-forno-bacon",
     title: "Patate al forno con Bacon",
     image: "images/patate-forno-bacon.jpg",
-    category: "contorno",
+    category: "patate",
     difficulty: "Facile",
     prepTime: "10 min",
     totalTime: "1 h 35 min",
