@@ -91,7 +91,7 @@ const RECIPES = [
     "description": [],
     "ingredients": [
       {
-        "qty": null,
+        "qty": 200,
         "unit": "",
         "name": "riso"
       },
