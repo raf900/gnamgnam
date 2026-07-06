@@ -76,7 +76,7 @@ const RECIPES = [
       }
     ],
     "steps": [
-      "Ricetta da completare."
+      "Ricetta da completare. yes"
     ]
   },
   {
