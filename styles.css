@@ -506,6 +506,153 @@ body.drag-active * {
   font-weight: 600;
 }
 
+/* ---------- Inline editing ---------- */
+
+.btn-edit {
+  flex-shrink: 0;
+  font: inherit;
+  font-size: 0.8125rem;
+  line-height: 1;
+  padding: 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: border-color 150ms, color 150ms;
+}
+
+.btn-edit:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.detail-h-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.detail-h-row h2 {
+  margin: 0 !important;
+}
+
+.meta-chips .btn-edit {
+  align-self: center;
+}
+
+.chip-category {
+  background: var(--accent);
+  color: #fff;
+  text-transform: capitalize;
+}
+
+.editor-input {
+  font: inherit;
+  font-size: 0.9375rem;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-sizing: border-box;
+}
+
+.editor-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.ing-edit-row {
+  display: grid;
+  grid-template-columns: 64px 76px 1fr auto;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.editor-textarea {
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  width: 100%;
+  min-height: 240px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.editor-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.editor-hint {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin: 8px 0 0;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+#recipe-detail .related-title {
+  margin: 48px 0 16px;
+  font-size: 1.25rem;
+}
+
+/* ---------- Token dialog ---------- */
+
+#token-dialog {
+  width: min(460px, calc(100vw - 32px));
+  padding: 0;
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+}
+
+#token-dialog::backdrop {
+  background: rgba(28, 25, 23, 0.4);
+}
+
+.token-body {
+  padding: 16px 20px 20px;
+  font-size: 0.9375rem;
+}
+
+.token-body p {
+  margin: 0 0 8px;
+}
+
+.token-body ol {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.token-body a {
+  color: var(--accent);
+}
+
+.token-body input {
+  font: inherit;
+  font-size: 0.9375rem;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
 /* ---------- Picker dialog ---------- */
 
 #picker {

@@ -62,6 +62,27 @@
     <div id="picker-list" class="picker-list"></div>
   </dialog>
 
+  <!-- GitHub token for saving edits -->
+  <dialog id="token-dialog">
+    <div class="picker-header">
+      <h3>Collega GitHub per salvare</h3>
+      <button id="token-close" class="btn btn-ghost" type="button">&times;</button>
+    </div>
+    <div class="token-body">
+      <p>Per salvare le modifiche sul sito serve un token GitHub. Va fatto una volta sola: il token resta salvato su questo dispositivo.</p>
+      <ol>
+        <li>Apri <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a></li>
+        <li>Repository access &rarr; "Only select repositories" &rarr; <strong>gnamgnam</strong></li>
+        <li>Permissions &rarr; Contents &rarr; <strong>Read and write</strong></li>
+        <li>Genera il token e incollalo qui sotto</li>
+      </ol>
+      <input id="token-input" type="password" placeholder="github_pat_&hellip;" autocomplete="off">
+      <div class="editor-actions">
+        <button id="token-save" class="btn btn-primary" type="button">Salva token</button>
+      </div>
+    </div>
+  </dialog>
+
   <script src="recipes.js"></script>
   <script src="app.js"></script>
 </body>

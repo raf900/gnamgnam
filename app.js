@@ -481,6 +481,139 @@
     navigator.clipboard.writeText(text || "");
   });
 
+  /* ---------- Saving edits to GitHub ----------
+     The site is static: edits are committed straight to recipes.js on
+     GitHub via the Contents API, using a fine-grained token the user
+     pastes once (kept in localStorage). The edit is applied to the
+     freshly fetched file, so edits from other devices are preserved. */
+
+  var GH_REPO = "raf900/gnamgnam";
+  var GH_FILE = "recipes.js";
+  var GH_BRANCH = "main";
+  var TOKEN_KEY = "gnamgnam.githubToken";
+
+  var tokenDialog = document.getElementById("token-dialog");
+  var tokenInput = document.getElementById("token-input");
+  var tokenPending = null;
+
+  function ensureToken() {
+    var token = localStorage.getItem(TOKEN_KEY);
+    if (token) return Promise.resolve(token);
+    return new Promise(function (resolve, reject) {
+      tokenPending = { resolve: resolve, reject: reject };
+      tokenInput.value = "";
+      tokenDialog.showModal();
+    });
+  }
+
+  document.getElementById("token-save").addEventListener("click", function () {
+    var value = tokenInput.value.trim();
+    if (!value) return;
+    localStorage.setItem(TOKEN_KEY, value);
+    var pending = tokenPending;
+    tokenPending = null;
+    tokenDialog.close();
+    if (pending) pending.resolve(value);
+  });
+
+  document.getElementById("token-close").addEventListener("click", function () {
+    tokenDialog.close();
+  });
+
+  tokenDialog.addEventListener("close", function () {
+    if (tokenPending) {
+      tokenPending.reject(new Error("Salvataggio annullato: nessun token inserito."));
+      tokenPending = null;
+    }
+  });
+
+  function decodeBase64Utf8(b64) {
+    var bin = atob(b64.replace(/\n/g, ""));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  function encodeBase64Utf8(text) {
+    var bytes = new TextEncoder().encode(text);
+    var bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+
+  /* Fetches the current recipes.js, applies `mutate` to the recipe with
+     the given id, and commits the regenerated file. */
+  function githubSave(recipeId, mutate) {
+    var token;
+    var apiUrl = "https://api.github.com/repos/" + GH_REPO + "/contents/" + GH_FILE;
+
+    return ensureToken().then(function (t) {
+      token = t;
+      return fetch(apiUrl + "?ref=" + GH_BRANCH, {
+        headers: {
+          Authorization: "Bearer " + token,
+          Accept: "application/vnd.github+json"
+        }
+      });
+    }).then(function (res) {
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        localStorage.removeItem(TOKEN_KEY);
+        throw new Error("Token non valido o senza accesso al repository. Riprova a salvare e inserisci un nuovo token.");
+      }
+      if (!res.ok) throw new Error("Errore GitHub durante la lettura (HTTP " + res.status + ").");
+      return res.json();
+    }).then(function (file) {
+      var text = decodeBase64Utf8(file.content);
+      var idx = text.indexOf("const RECIPES");
+      if (idx === -1) throw new Error("Formato inatteso di recipes.js su GitHub.");
+      var header = text.slice(0, idx);
+
+      var data = new Function(text + "\nreturn RECIPES;")();
+      var recipe = data.find(function (r) { return r.id === recipeId; });
+      if (!recipe) throw new Error("Ricetta \"" + recipeId + "\" non trovata su GitHub.");
+      mutate(recipe);
+
+      var newText = header + "const RECIPES = " +
+        JSON.stringify(data, null, 2) + ";\n";
+
+      return fetch(apiUrl, {
+        method: "PUT",
+        headers: {
+          Authorization: "Bearer " + token,
+          Accept: "application/vnd.github+json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: "Modifica " + recipeId + " dal sito",
+          content: encodeBase64Utf8(newText),
+          sha: file.sha,
+          branch: GH_BRANCH
+        })
+      });
+    }).then(function (res) {
+      if (!res.ok) throw new Error("Errore GitHub durante il salvataggio (HTTP " + res.status + ").");
+      return true;
+    });
+  }
+
+  /* Runs a section save: commit to GitHub, then apply locally and
+     re-render. `btn` is the Salva button to put in a loading state. */
+  function saveSection(recipe, mutate, btn) {
+    btn.disabled = true;
+    btn.textContent = "Salvataggio…";
+    githubSave(recipe.id, mutate).then(function () {
+      mutate(recipe);
+      renderFilters();
+      renderRecipeGrid();
+      renderPlan();
+      renderDetail(recipe);
+    }).catch(function (err) {
+      btn.disabled = false;
+      btn.textContent = "Salva";
+      alert(err.message);
+    });
+  }
+
   /* ---------- Category filters ---------- */
 
   var activeCategory = null; // null = show all
@@ -513,41 +646,217 @@
 
   /* ---------- Recipe grid ---------- */
 
+  function makeRecipeCard(recipe) {
+    var card = document.createElement("a");
+    card.className = "recipe-card card";
+    card.href = "#recipe/" + recipe.id;
+
+    attachDragSource(card, function () { return "recipe:" + recipe.id; });
+
+    var img = document.createElement("img");
+    img.src = recipe.image;
+    img.alt = recipe.title;
+    img.loading = "lazy";
+    card.appendChild(img);
+
+    var body = document.createElement("div");
+    body.className = "recipe-card-body";
+
+    var h3 = document.createElement("h3");
+    h3.textContent = recipe.title;
+    body.appendChild(h3);
+
+    var meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = recipe.totalTime + " · " + recipe.difficulty + " · " + recipe.servings + " porzioni";
+    body.appendChild(meta);
+
+    card.appendChild(body);
+    return card;
+  }
+
   function renderRecipeGrid() {
     var grid = document.getElementById("recipe-grid");
     grid.innerHTML = "";
     RECIPES.forEach(function (recipe) {
       if (activeCategory && recipe.category !== activeCategory) return;
-      var card = document.createElement("a");
-      card.className = "recipe-card card";
-      card.href = "#recipe/" + recipe.id;
-
-      attachDragSource(card, function () { return "recipe:" + recipe.id; });
-
-      var img = document.createElement("img");
-      img.src = recipe.image;
-      img.alt = recipe.title;
-      img.loading = "lazy";
-      card.appendChild(img);
-
-      var body = document.createElement("div");
-      body.className = "recipe-card-body";
-
-      var h3 = document.createElement("h3");
-      h3.textContent = recipe.title;
-      body.appendChild(h3);
-
-      var meta = document.createElement("div");
-      meta.className = "meta";
-      meta.textContent = recipe.totalTime + " · " + recipe.difficulty + " · " + recipe.servings + " porzioni";
-      body.appendChild(meta);
-
-      card.appendChild(body);
-      grid.appendChild(card);
+      grid.appendChild(makeRecipeCard(recipe));
     });
   }
 
   /* ---------- Recipe detail ---------- */
+
+  function editButton(onClick) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn-edit";
+    b.title = "Modifica";
+    b.textContent = "✎";
+    b.addEventListener("click", onClick);
+    return b;
+  }
+
+  function editorInput(value, placeholder) {
+    var input = document.createElement("input");
+    input.type = "text";
+    input.className = "editor-input";
+    input.value = value;
+    input.placeholder = placeholder;
+    return input;
+  }
+
+  function editorActions(recipe, onSave) {
+    var actions = document.createElement("div");
+    actions.className = "editor-actions";
+
+    var save = document.createElement("button");
+    save.type = "button";
+    save.className = "btn btn-primary";
+    save.textContent = "Salva";
+    save.addEventListener("click", function () { onSave(save); });
+    actions.appendChild(save);
+
+    var cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.className = "btn btn-ghost";
+    cancel.textContent = "Annulla";
+    cancel.addEventListener("click", function () { renderDetail(recipe); });
+    actions.appendChild(cancel);
+
+    return actions;
+  }
+
+  function openCategoryEditor(recipe, container) {
+    container.innerHTML = "";
+
+    var input = editorInput(recipe.category || "", "es. pasta");
+    input.setAttribute("list", "category-list");
+    var datalist = document.createElement("datalist");
+    datalist.id = "category-list";
+    RECIPES.map(function (r) { return r.category; })
+      .filter(function (c, i, arr) { return c && arr.indexOf(c) === i; })
+      .forEach(function (c) {
+        var opt = document.createElement("option");
+        opt.value = c;
+        datalist.appendChild(opt);
+      });
+
+    container.appendChild(input);
+    container.appendChild(datalist);
+    container.appendChild(editorActions(recipe, function (btn) {
+      var value = input.value.trim().toLowerCase();
+      if (!value) { alert("Inserisci una categoria."); return; }
+      saveSection(recipe, function (r) { r.category = value; }, btn);
+    }));
+    input.focus();
+  }
+
+  function openIngredientsEditor(recipe, container) {
+    container.innerHTML = "";
+
+    var rows = document.createElement("div");
+
+    function addRow(ing) {
+      var row = document.createElement("div");
+      row.className = "ing-edit-row";
+      row.appendChild(editorInput(ing.qty === null ? "" : String(ing.qty), "q.b."));
+      row.appendChild(editorInput(ing.unit || "", "g"));
+      row.appendChild(editorInput(ing.name || "", "ingrediente"));
+
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "btn-edit";
+      del.title = "Rimuovi";
+      del.textContent = "✕";
+      del.addEventListener("click", function () { row.remove(); });
+      row.appendChild(del);
+
+      rows.appendChild(row);
+    }
+
+    recipe.ingredients.forEach(addRow);
+    container.appendChild(rows);
+
+    var add = document.createElement("button");
+    add.type = "button";
+    add.className = "btn btn-ghost";
+    add.textContent = "+ Aggiungi ingrediente";
+    add.addEventListener("click", function () {
+      addRow({ qty: null, unit: "", name: "" });
+    });
+    container.appendChild(add);
+
+    var hint = document.createElement("p");
+    hint.className = "editor-hint";
+    hint.textContent = "Quantità vuota = q.b. — usa nomi identici tra ricette per sommarli nella lista della spesa.";
+    container.appendChild(hint);
+
+    container.appendChild(editorActions(recipe, function (btn) {
+      var list = [];
+      rows.querySelectorAll(".ing-edit-row").forEach(function (row) {
+        var inputs = row.querySelectorAll("input");
+        var name = inputs[2].value.trim();
+        if (!name) return;
+        var raw = inputs[0].value.trim().replace(",", ".");
+        var qty = raw === "" || raw.toLowerCase() === "q.b." || isNaN(parseFloat(raw))
+          ? null : parseFloat(raw);
+        list.push({ qty: qty, unit: inputs[1].value.trim(), name: name });
+      });
+      if (list.length === 0) { alert("Inserisci almeno un ingrediente."); return; }
+      saveSection(recipe, function (r) { r.ingredients = list; }, btn);
+    }));
+  }
+
+  function openStepsEditor(recipe, container) {
+    container.innerHTML = "";
+
+    var textarea = document.createElement("textarea");
+    textarea.className = "editor-textarea";
+    textarea.value = recipe.steps.join("\n\n");
+    container.appendChild(textarea);
+
+    var hint = document.createElement("p");
+    hint.className = "editor-hint";
+    hint.textContent = "Un passaggio per riga.";
+    container.appendChild(hint);
+
+    container.appendChild(editorActions(recipe, function (btn) {
+      var steps = textarea.value.split(/\n+/)
+        .map(function (s) { return s.trim(); })
+        .filter(function (s) { return s.length > 0; });
+      if (steps.length === 0) { alert("Inserisci almeno un passaggio."); return; }
+      saveSection(recipe, function (r) { r.steps = steps; }, btn);
+    }));
+    textarea.focus();
+  }
+
+  function renderIngredientsList(recipe, container) {
+    container.innerHTML = "";
+    var ul = document.createElement("ul");
+    ul.className = "ingredients-list";
+    recipe.ingredients.forEach(function (ing) {
+      var li = document.createElement("li");
+      var qty = document.createElement("span");
+      qty.className = "qty";
+      qty.textContent = ing.qty === null ? "q.b." : ing.qty + (ing.unit ? " " + ing.unit : "");
+      li.appendChild(qty);
+      li.appendChild(document.createTextNode(ing.name));
+      ul.appendChild(li);
+    });
+    container.appendChild(ul);
+  }
+
+  function renderStepsList(recipe, container) {
+    container.innerHTML = "";
+    var ol = document.createElement("ol");
+    ol.className = "steps-list";
+    recipe.steps.forEach(function (step) {
+      var li = document.createElement("li");
+      li.textContent = step;
+      ol.appendChild(li);
+    });
+    container.appendChild(ol);
+  }
 
   function renderDetail(recipe) {
     detailEl.innerHTML = "";
@@ -562,6 +871,7 @@
     h1.textContent = recipe.title;
     detailEl.appendChild(h1);
 
+    var chipsWrap = document.createElement("div");
     var chips = document.createElement("div");
     chips.className = "meta-chips";
     [
@@ -575,7 +885,17 @@
       chip.textContent = label;
       chips.appendChild(chip);
     });
-    detailEl.appendChild(chips);
+    if (recipe.category) {
+      var catChip = document.createElement("span");
+      catChip.className = "chip chip-category";
+      catChip.textContent = recipe.category;
+      chips.appendChild(catChip);
+    }
+    chips.appendChild(editButton(function () {
+      openCategoryEditor(recipe, chipsWrap);
+    }));
+    chipsWrap.appendChild(chips);
+    detailEl.appendChild(chipsWrap);
 
     if (recipe.description.length) {
       var desc = document.createElement("div");
@@ -592,38 +912,57 @@
     columns.className = "detail-columns";
 
     var ingCol = document.createElement("div");
+    var ingRow = document.createElement("div");
+    ingRow.className = "detail-h-row";
     var ingH = document.createElement("h2");
     ingH.textContent = "Ingredienti";
-    ingCol.appendChild(ingH);
-    var ingUl = document.createElement("ul");
-    ingUl.className = "ingredients-list";
-    recipe.ingredients.forEach(function (ing) {
-      var li = document.createElement("li");
-      var qty = document.createElement("span");
-      qty.className = "qty";
-      qty.textContent = ing.qty === null ? "q.b." : ing.qty + (ing.unit ? " " + ing.unit : "");
-      li.appendChild(qty);
-      li.appendChild(document.createTextNode(ing.name));
-      ingUl.appendChild(li);
-    });
-    ingCol.appendChild(ingUl);
+    ingRow.appendChild(ingH);
+    var ingBody = document.createElement("div");
+    ingRow.appendChild(editButton(function () {
+      openIngredientsEditor(recipe, ingBody);
+    }));
+    ingCol.appendChild(ingRow);
+    ingCol.appendChild(ingBody);
+    renderIngredientsList(recipe, ingBody);
     columns.appendChild(ingCol);
 
     var stepsCol = document.createElement("div");
+    var stepsRow = document.createElement("div");
+    stepsRow.className = "detail-h-row";
     var stepsH = document.createElement("h2");
     stepsH.textContent = "Preparazione";
-    stepsCol.appendChild(stepsH);
-    var ol = document.createElement("ol");
-    ol.className = "steps-list";
-    recipe.steps.forEach(function (step) {
-      var li = document.createElement("li");
-      li.textContent = step;
-      ol.appendChild(li);
-    });
-    stepsCol.appendChild(ol);
+    stepsRow.appendChild(stepsH);
+    var stepsBody = document.createElement("div");
+    stepsRow.appendChild(editButton(function () {
+      openStepsEditor(recipe, stepsBody);
+    }));
+    stepsCol.appendChild(stepsRow);
+    stepsCol.appendChild(stepsBody);
+    renderStepsList(recipe, stepsBody);
     columns.appendChild(stepsCol);
 
     detailEl.appendChild(columns);
+
+    /* Other recipes: same category first */
+    var others = RECIPES.filter(function (r) { return r.id !== recipe.id; });
+    others.sort(function (a, b) {
+      return (a.category === recipe.category ? 0 : 1) -
+             (b.category === recipe.category ? 0 : 1);
+    });
+    others = others.slice(0, 4);
+    if (others.length) {
+      var relH = document.createElement("h2");
+      relH.className = "related-title";
+      relH.textContent = "Altre ricette";
+      detailEl.appendChild(relH);
+
+      var relGrid = document.createElement("div");
+      relGrid.className = "recipe-grid related-grid";
+      others.forEach(function (r) {
+        relGrid.appendChild(makeRecipeCard(r));
+      });
+      detailEl.appendChild(relGrid);
+    }
   }
 
   /* ---------- Router ---------- */
