@@ -567,6 +567,23 @@ main {
     height: 40px;
   }
 
+  .recipe-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .recipe-card-body {
+    padding: 10px 12px 12px;
+  }
+
+  .recipe-card h3 {
+    font-size: 0.9375rem;
+  }
+
+  .recipe-card .meta {
+    font-size: 0.75rem;
+  }
+
   .detail-columns {
     grid-template-columns: 1fr;
   }
