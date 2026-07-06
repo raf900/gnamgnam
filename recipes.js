@@ -27,7 +27,7 @@ const RECIPES = [
   {
     id: "insalata-mista",
     title: "Insalata Mista",
-    image: "images/placeholder.svg",
+    image: "images/insalata-mista.jpg",
     difficulty: "Facile",
     prepTime: "15 min",
     totalTime: "15 min",
@@ -46,9 +46,9 @@ const RECIPES = [
     steps: ["Ricetta da completare."]
   },
   {
-    id: "riso-cantonese",
-    title: "Riso Cantonese",
-    image: "images/placeholder.svg",
+    id: "riso-cantonale",
+    title: "Riso Cantonale",
+    image: "images/riso-cantonale.jpg",
     difficulty: "Facile",
     prepTime: "10 min",
     totalTime: "30 min",
