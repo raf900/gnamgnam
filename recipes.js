@@ -96,28 +96,28 @@ const RECIPES = [
         "name": "riso"
       },
       {
-        "qty": null,
+        "qty": 1,
         "unit": "",
         "name": "cipolla"
       },
       {
-        "qty": null,
+        "qty": 1,
         "unit": "",
         "name": "carota"
       },
       {
-        "qty": null,
+        "qty": 1,
         "unit": "",
         "name": "sedano"
       },
       {
-        "qty": null,
+        "qty": 1,
         "unit": "",
         "name": "uova"
       },
       {
-        "qty": null,
-        "unit": "",
+        "qty": 40,
+        "unit": "g",
         "name": "bacon"
       },
       {
