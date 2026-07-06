@@ -440,12 +440,43 @@
     navigator.clipboard.writeText(text || "");
   });
 
+  /* ---------- Category filters ---------- */
+
+  var activeCategory = null; // null = show all
+
+  function renderFilters() {
+    var bar = document.getElementById("filter-bar");
+    bar.innerHTML = "";
+
+    var categories = [];
+    RECIPES.forEach(function (recipe) {
+      if (recipe.category && categories.indexOf(recipe.category) === -1) {
+        categories.push(recipe.category);
+      }
+    });
+    categories.sort(function (a, b) { return a.localeCompare(b, "it"); });
+
+    [null].concat(categories).forEach(function (cat) {
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "filter-chip" + (cat === activeCategory ? " active" : "");
+      chip.textContent = cat === null ? "Tutte" : cat;
+      chip.addEventListener("click", function () {
+        activeCategory = cat;
+        renderFilters();
+        renderRecipeGrid();
+      });
+      bar.appendChild(chip);
+    });
+  }
+
   /* ---------- Recipe grid ---------- */
 
   function renderRecipeGrid() {
     var grid = document.getElementById("recipe-grid");
     grid.innerHTML = "";
     RECIPES.forEach(function (recipe) {
+      if (activeCategory && recipe.category !== activeCategory) return;
       var card = document.createElement("a");
       card.className = "recipe-card card";
       card.href = "#recipe/" + recipe.id;
@@ -589,6 +620,7 @@
   /* ---------- Init ---------- */
 
   renderPlan();
+  renderFilters();
   renderRecipeGrid();
   route();
 })();
