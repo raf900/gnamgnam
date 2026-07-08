@@ -17,7 +17,8 @@
  *   servings    number of servings
  *   description array of paragraphs (can be empty: [])
  *   ingredients array of { qty, unit, name }
- *                 qty:  number, or null for "q.b." (quanto basta)
+ *                 qty:  number, fraction string like "1/2" or "1 1/2",
+ *                       or null for "q.b." (quanto basta)
  *                 unit: "g", "kg", "ml", "l", "cucchiai", "spicchi", ...
  *                       or "" for countable items (e.g. 4 tuorli)
  *                 name: ingredient name — keep it IDENTICAL across

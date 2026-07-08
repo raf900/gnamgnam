@@ -396,6 +396,47 @@
     l: { unit: "ml", factor: 1000 }
   };
 
+  /* qty can be a number, a fraction string ("1/2", "1 1/2") or null.
+     These helpers convert between the two representations. */
+
+  function qtyToNumber(qty) {
+    if (qty === null || qty === undefined) return null;
+    if (typeof qty === "number") return qty;
+    var m = String(qty).trim().match(/^(?:(\d+)\s+)?(\d+)\s*\/\s*(\d+)$/);
+    if (m && parseInt(m[3], 10) !== 0) {
+      return (m[1] ? parseInt(m[1], 10) : 0) +
+        parseInt(m[2], 10) / parseInt(m[3], 10);
+    }
+    var f = parseFloat(String(qty).replace(",", "."));
+    return isNaN(f) ? null : f;
+  }
+
+  var COMMON_FRACTIONS = [
+    [0.25, "1/4"], [1 / 3, "1/3"], [0.5, "1/2"], [2 / 3, "2/3"], [0.75, "3/4"]
+  ];
+
+  function formatNumber(n) {
+    if (Math.abs(n - Math.round(n)) < 0.03) return String(Math.round(n));
+    var whole = Math.floor(n);
+    var frac = n - whole;
+    for (var i = 0; i < COMMON_FRACTIONS.length; i++) {
+      if (Math.abs(frac - COMMON_FRACTIONS[i][0]) < 0.03) {
+        return (whole ? whole + " " : "") + COMMON_FRACTIONS[i][1];
+      }
+    }
+    return String(Math.round(n * 100) / 100);
+  }
+
+  function parseQtyInput(raw) {
+    raw = raw.trim();
+    if (raw === "" || raw.toLowerCase() === "q.b.") return null;
+    if (/^(?:\d+\s+)?\d+\s*\/\s*\d+$/.test(raw)) {
+      return raw.replace(/\s*\/\s*/, "/").replace(/\s+/, " ");
+    }
+    var f = parseFloat(raw.replace(",", "."));
+    return isNaN(f) ? null : f;
+  }
+
   function buildShoppingList(currentPlan, recipes) {
     var groups = {};
     var order = [];
@@ -405,7 +446,7 @@
       if (!recipe) return;
       recipe.ingredients.forEach(function (ing) {
         var name = ing.name.trim().toLowerCase();
-        var qty = ing.qty;
+        var qty = qtyToNumber(ing.qty);
         var unit = (ing.unit || "").trim().toLowerCase();
         var conv = UNIT_CONVERSIONS[unit];
         if (conv && typeof qty === "number") {
@@ -434,8 +475,8 @@
     var unit = item.unit;
     if (unit === "g" && qty >= 1000) { qty = qty / 1000; unit = "kg"; }
     if (unit === "ml" && qty >= 1000) { qty = qty / 1000; unit = "l"; }
-    var n = Math.round(qty * 100) / 100;
-    return unit ? n + " " + unit : String(n);
+    var n = formatNumber(qty);
+    return unit ? n + " " + unit : n;
   }
 
   function renderShoppingList() {
@@ -788,7 +829,7 @@
 
     var hint = document.createElement("p");
     hint.className = "editor-hint";
-    hint.textContent = "Quantità vuota = q.b. — usa nomi identici tra ricette per sommarli nella lista della spesa.";
+    hint.textContent = "Quantità vuota = q.b.; sono ammesse frazioni come 1/2 o 1 1/2 — usa nomi identici tra ricette per sommarli nella lista della spesa.";
     container.appendChild(hint);
 
     container.appendChild(editorActions(recipe, function (btn) {
@@ -797,10 +838,11 @@
         var inputs = row.querySelectorAll("input");
         var name = inputs[2].value.trim();
         if (!name) return;
-        var raw = inputs[0].value.trim().replace(",", ".");
-        var qty = raw === "" || raw.toLowerCase() === "q.b." || isNaN(parseFloat(raw))
-          ? null : parseFloat(raw);
-        list.push({ qty: qty, unit: inputs[1].value.trim(), name: name });
+        list.push({
+          qty: parseQtyInput(inputs[0].value),
+          unit: inputs[1].value.trim(),
+          name: name
+        });
       });
       if (list.length === 0) { alert("Inserisci almeno un ingrediente."); return; }
       saveSection(recipe, function (r) { r.ingredients = list; }, btn);
